@@ -1,10 +1,10 @@
 package com.vijay.order_service.service;
 
-import com.vijay.order_service.client.DriverClient;
-import com.vijay.order_service.dto.DriverDTO;
 import com.vijay.order_service.dto.OrderRequest;
 import com.vijay.order_service.entity.Order;
 import com.vijay.order_service.entity.OrderStatus;
+import com.vijay.order_service.event.OrderCreatedEvent;
+import com.vijay.order_service.kafka.OrderEventProducer;
 import com.vijay.order_service.repository.OrderRepository;
 import org.springframework.stereotype.Service;
 
@@ -15,11 +15,12 @@ import java.util.List;
 public class OrderService {
 
     private final OrderRepository orderRepository;
-    private final DriverClient driverClient;   // Feign Client
+    private final OrderEventProducer eventProducer;
 
-    public OrderService(OrderRepository orderRepository, DriverClient driverClient) {
+    public OrderService(OrderRepository orderRepository,
+                        OrderEventProducer eventProducer) {
         this.orderRepository = orderRepository;
-        this.driverClient = driverClient;
+        this.eventProducer = eventProducer;
     }
     public Order createOrder(OrderRequest request) {
 
@@ -27,25 +28,29 @@ public class OrderService {
                 .userId(request.getUserId())
                 .pickupAddress(request.getPickupAddress())
                 .deliveryAddress(request.getDeliveryAddress())
+                .status(OrderStatus.PENDING)       // always pending initially
                 .createdAt(LocalDateTime.now())
                 .build();
-        List<DriverDTO> availableDrivers = driverClient.getAvailableDrivers();
 
-        if (availableDrivers.isEmpty()) {
-            order.setStatus(OrderStatus.PENDING);
-        } else {
+        Order saved = orderRepository.save(order);
 
-            DriverDTO driver = availableDrivers.get(0);
-            order.setStatus(OrderStatus.ASSIGNED);
-            order.setDriverId(driver.getId());
-        }
+        // Publish Kafka event
+        eventProducer.publish(
+                new OrderCreatedEvent(
+                        saved.getId(),
+                        saved.getUserId(),
+                        saved.getPickupAddress()
+                )
+        );
 
-        return orderRepository.save(order);
+        return saved;
     }
+
     public Order updateStatus(Long id, OrderStatus newStatus) {
 
         Order order = orderRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Order not found"));
+
         if (newStatus == OrderStatus.DELIVERED &&
                 order.getStatus() != OrderStatus.PICKED_UP) {
             throw new RuntimeException("Cannot deliver an order that hasn't been picked up!");
@@ -54,9 +59,11 @@ public class OrderService {
         order.setStatus(newStatus);
         return orderRepository.save(order);
     }
+
     public List<Order> getAllOrders() {
         return orderRepository.findAll();
     }
+
     public Order getOrder(Long id) {
         return orderRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Order not found"));
