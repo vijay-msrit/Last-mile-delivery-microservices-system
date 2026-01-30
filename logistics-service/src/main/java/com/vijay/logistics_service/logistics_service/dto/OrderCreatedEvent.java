@@ -1,4 +1,4 @@
-package com.vijay.order_service.event;
+package com.vijay.logistics_service.logistics_service.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
