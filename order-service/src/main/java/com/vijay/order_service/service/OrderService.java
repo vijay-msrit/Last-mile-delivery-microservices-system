@@ -22,32 +22,47 @@ public class OrderService {
         this.orderRepository = orderRepository;
         this.eventProducer = eventProducer;
     }
+
+    // Create order (NO driver logic here)
     public Order createOrder(OrderRequest request) {
 
         Order order = Order.builder()
                 .userId(request.getUserId())
                 .pickupAddress(request.getPickupAddress())
                 .deliveryAddress(request.getDeliveryAddress())
-                .status(OrderStatus.PENDING)       // always pending initially
+                .status(OrderStatus.PENDING)
                 .createdAt(LocalDateTime.now())
                 .build();
 
         Order saved = orderRepository.save(order);
 
-        // Publish Kafka event
-        eventProducer.publish(
-                new OrderCreatedEvent(
-                        saved.getId(),
-                        saved.getUserId(),
-                        saved.getPickupAddress()
-                )
+        // Kafka event
+        OrderCreatedEvent event = new OrderCreatedEvent(
+                saved.getId(),
+                saved.getUserId(),
+                saved.getPickupAddress(),
+                saved.getDriverId(),          // null at this time
+                saved.getStatus().name()      // PENDING
         );
+
+        eventProducer.publish(event);
 
         return saved;
     }
 
-    public Order updateStatus(Long id, OrderStatus newStatus) {
 
+    // Assign driver (called by Logistics Service)
+    public Order assignDriver(Long id, Long driverId) {
+        Order order = orderRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Order not found"));
+
+        order.setDriverId(driverId);
+        order.setStatus(OrderStatus.ASSIGNED);
+
+        return orderRepository.save(order);
+    }
+
+    public Order updateStatus(Long id, OrderStatus newStatus) {
         Order order = orderRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Order not found"));
 

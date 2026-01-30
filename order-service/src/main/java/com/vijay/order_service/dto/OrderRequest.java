@@ -8,7 +8,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class OrderRequest {
-    private Long userId;            // The customer ID
-    private String pickupAddress;   // Where the driver goes first
-    private String deliveryAddress; // The final destination
+    private Long userId;
+    private String pickupAddress;
+    private String deliveryAddress;
 }

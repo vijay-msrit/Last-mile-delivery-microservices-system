@@ -1,13 +1,13 @@
-package com.vijay.order_service.client;
+package com.vijay.logistics_service.logistics_service.Client;
 
-import com.vijay.order_service.dto.DriverDTO;
+import com.vijay.logistics_service.logistics_service.dto.DriverDTO;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
+
 import java.util.List;
 
-@FeignClient(name="driver-service", url="http://localhost:8082")
+@FeignClient(name = "driver-service", url = "http://localhost:8082")
 public interface DriverClient {
-
     @GetMapping("/api/drivers/available")
     List<DriverDTO> getAvailableDrivers();
 }

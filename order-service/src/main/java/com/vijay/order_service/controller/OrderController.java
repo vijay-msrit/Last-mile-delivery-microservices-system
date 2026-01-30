@@ -20,9 +20,16 @@ public class OrderController {
 
     @PostMapping
     public ResponseEntity<Order> placeOrder(@RequestBody OrderRequest request) {
-        // We pass the DTO to the service
+
         return ResponseEntity.ok(orderService.createOrder(request));
     }
+
+    @PatchMapping("/{id}/assign")
+    public ResponseEntity<Order> assignDriver(@PathVariable Long id,
+                                              @RequestParam Long driverId) {
+        return ResponseEntity.ok(orderService.assignDriver(id, driverId));
+    }
+
 
     @PatchMapping("/{id}/status")
     public ResponseEntity<Order> updateStatus(@PathVariable Long id, @RequestParam OrderStatus status) {
