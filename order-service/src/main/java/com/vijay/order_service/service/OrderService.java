@@ -51,7 +51,7 @@ public class OrderService {
     }
 
 
-    // Assign driver (called by Logistics Service)
+
     public Order assignDriver(Long id, Long driverId) {
         Order order = orderRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Order not found"));

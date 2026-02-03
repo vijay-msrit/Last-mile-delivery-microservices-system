@@ -42,5 +42,4 @@ public class OrderEventListener {
                     + " to order " + event.getOrderId());
         }
     }
-
 }

@@ -45,6 +45,7 @@ public class DriverController {
 
         gpsEventProducer.send(new GpsEvent(id, lat, lng));
         return ResponseEntity.ok("GPS sent to Kafka");
+    }
     @GetMapping("/available")
     public ResponseEntity<List<DriverResponse>> getAvailable() {
         return ResponseEntity.ok(driverService.getAvailableDrivers());

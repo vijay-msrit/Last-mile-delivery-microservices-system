@@ -7,6 +7,10 @@
         <option value="$PROJECT_DIR$/order-service/pom.xml" />
         <option value="$PROJECT_DIR$/driver-service/pom.xml" />
         <option value="$PROJECT_DIR$/logistics-service/pom.xml" />
+        <option value="$PROJECT_DIR$/Trackingservice/src/main/java/com/vijay/Trackingservice/pom.xml" />
+        <option value="$PROJECT_DIR$/Trackingservice/pom.xml" />
+        <option value="$PROJECT_DIR$/notification-service/pom.xml" />
+        <option value="$PROJECT_DIR$/user-service/pom.xml" />
       </list>
     </option>
   </component>
