@@ -3,7 +3,9 @@
   <component name="Encoding">
     <file url="file://$PROJECT_DIR$/Trackingservice/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/Trackingservice/src/main/java/com/vijay/Trackingservice/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/api_gateway/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/driver-service/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/eureka-server/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/logistics-service/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/notification-service/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/order-service/src/main/java" charset="UTF-8" />

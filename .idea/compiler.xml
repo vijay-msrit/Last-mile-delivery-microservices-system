@@ -7,9 +7,11 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
-        <module name="notification-service" />
         <module name="Trackingservice" />
         <module name="user-service" />
+        <module name="api_gateway" />
+        <module name="eureka-server" />
+        <module name="notification-service" />
       </profile>
       <profile name="Annotation profile for order-service" enabled="true">
         <sourceOutputDir name="target/generated-sources/annotations" />
@@ -27,7 +29,9 @@
   <component name="JavacSettings">
     <option name="ADDITIONAL_OPTIONS_OVERRIDE">
       <module name="Trackingservice" options="-parameters" />
+      <module name="api_gateway" options="-parameters" />
       <module name="driver-service." options="-parameters" />
+      <module name="eureka-server" options="-parameters" />
       <module name="logistics-service" options="-parameters" />
       <module name="notification-service" options="-parameters" />
       <module name="order-service" options="-parameters" />
