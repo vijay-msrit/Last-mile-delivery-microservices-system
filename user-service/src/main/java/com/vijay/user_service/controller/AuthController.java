@@ -7,18 +7,14 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
-
     private final UserService service;
-
     public AuthController(UserService service) {
         this.service = service;
     }
-
     @PostMapping("/register")
     public String register(@RequestBody User user) {
         return service.register(user);
     }
-
     @PostMapping("/login")
     public String login(@RequestParam String email,
                         @RequestParam String password) {

@@ -9,20 +9,16 @@ import org.springframework.web.server.ResponseStatusException;
 
 @Service
 public class UserService {
-
     private final UserRepository repo;
     private final JwtUtil jwtUtil;
-
     public UserService(UserRepository repo, JwtUtil jwtUtil) {
         this.repo = repo;
         this.jwtUtil = jwtUtil;
     }
-
     public String register(User user) {
         repo.save(user);
         return "User Registered";
     }
-
     public String login(String email, String password) {
         User user = repo.findByEmail(email)
                 .orElseThrow(() -> new ResponseStatusException(
@@ -34,5 +30,4 @@ public class UserService {
         }
         return jwtUtil.generateToken(email);
     }
-
 }

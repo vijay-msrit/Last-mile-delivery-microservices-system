@@ -15,7 +15,6 @@ public class OrderEventProducer {
         this.kafkaTemplate = kafkaTemplate;
         this.objectMapper = new ObjectMapper();
     }
-
     public void publish(OrderCreatedEvent event) {
         try {
             String json = objectMapper.writeValueAsString(event);

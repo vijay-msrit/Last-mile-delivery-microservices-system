@@ -50,4 +50,20 @@ public class DriverController {
     public ResponseEntity<List<DriverResponse>> getAvailable() {
         return ResponseEntity.ok(driverService.getAvailableDrivers());
     }
+
+    @PostMapping("/{driverId}/orders/{orderId}/pickup")
+    public ResponseEntity<String> markOrderPickedUp(
+            @PathVariable Long driverId,
+            @PathVariable Long orderId) {
+        driverService.markOrderPickedUp(orderId, driverId);
+        return ResponseEntity.ok("Order marked as picked up");
+    }
+
+    @PostMapping("/{driverId}/orders/{orderId}/delivered")
+    public ResponseEntity<String> markOrderDelivered(
+            @PathVariable Long driverId,
+            @PathVariable Long orderId) {
+        driverService.markOrderDelivered(orderId, driverId);
+        return ResponseEntity.ok("Order marked as delivered");
+    }
 }

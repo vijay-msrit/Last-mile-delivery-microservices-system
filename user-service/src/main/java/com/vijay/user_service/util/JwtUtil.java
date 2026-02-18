@@ -11,8 +11,6 @@ import java.util.Date;
 
 @Component
 public class JwtUtil {
-
-    // 256-bit key derived from string
     private final SecretKey key = Keys.hmacShaKeyFor(
             "vijay-super-secret-jwt-key-2026-delivery-system"
                     .getBytes(StandardCharsets.UTF_8)

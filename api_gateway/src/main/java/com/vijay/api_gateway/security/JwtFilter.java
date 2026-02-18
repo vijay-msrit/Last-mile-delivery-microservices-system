@@ -1,5 +1,6 @@
 package com.vijay.api_gateway.security;
 
+import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
@@ -16,13 +17,21 @@ import java.security.Key;
 public class JwtFilter implements GlobalFilter {
 
     private static final String SECRET =
-            "mySecretKeymySecretKeymySecretKey"; // 32+ chars
+            "mySecretKeymySecretKeymySecretKey";
 
     private final Key key =
             Keys.hmacShaKeyFor(SECRET.getBytes(StandardCharsets.UTF_8));
 
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
+
+        String path = exchange.getRequest().getURI().getPath();
+
+        // Allow public endpoints
+        if (path.startsWith("/auth")) {
+            return chain.filter(exchange);
+        }
+
         String auth = exchange.getRequest()
                 .getHeaders()
                 .getFirst("Authorization");
@@ -35,15 +44,36 @@ public class JwtFilter implements GlobalFilter {
         try {
             String token = auth.replace("Bearer ", "");
 
-            Jwts.parserBuilder()
+            Claims claims = Jwts.parserBuilder()
                     .setSigningKey(key)
                     .build()
-                    .parseClaimsJws(token);
+                    .parseClaimsJws(token)
+                    .getBody();
+
+            String role = claims.get("role", String.class);
+            if (!isAuthorized(path, role)) {
+                exchange.getResponse().setStatusCode(HttpStatus.FORBIDDEN);
+                return exchange.getResponse().setComplete();
+            }
 
         } catch (Exception e) {
             exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
             return exchange.getResponse().setComplete();
         }
+
         return chain.filter(exchange);
+    }
+
+    private boolean isAuthorized(String path, String role) {
+
+        if (path.startsWith("/admin") && !"ADMIN".equals(role)) {
+            return false;
+        }
+
+        if (path.startsWith("/driver") && !"DRIVER".equals(role)) {
+            return false;
+        }
+
+        return !path.startsWith("/orders") || "CUSTOMER".equals(role);
     }
 }

@@ -13,19 +13,14 @@ import java.util.List;
 
 @Service
 public class OrderService {
-
     private final OrderRepository orderRepository;
     private final OrderEventProducer eventProducer;
-
     public OrderService(OrderRepository orderRepository,
                         OrderEventProducer eventProducer) {
         this.orderRepository = orderRepository;
         this.eventProducer = eventProducer;
     }
-
-    // Create order (NO driver logic here)
     public Order createOrder(OrderRequest request) {
-
         Order order = Order.builder()
                 .userId(request.getUserId())
                 .pickupAddress(request.getPickupAddress())
@@ -33,24 +28,19 @@ public class OrderService {
                 .status(OrderStatus.PENDING)
                 .createdAt(LocalDateTime.now())
                 .build();
-
         Order saved = orderRepository.save(order);
-
-        // Kafka event
         OrderCreatedEvent event = new OrderCreatedEvent(
                 saved.getId(),
                 saved.getUserId(),
                 saved.getPickupAddress(),
-                saved.getDriverId(),          // null at this time
-                saved.getStatus().name()      // PENDING
+                saved.getDriverId(),
+                saved.getStatus().name()
         );
 
         eventProducer.publish(event);
 
         return saved;
     }
-
-
 
     public Order assignDriver(Long id, Long driverId) {
         Order order = orderRepository.findById(id)
