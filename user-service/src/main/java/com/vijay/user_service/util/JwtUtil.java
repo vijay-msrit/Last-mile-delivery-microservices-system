@@ -13,12 +13,12 @@ import java.util.Date;
 public class JwtUtil {
     private final SecretKey key = Keys.hmacShaKeyFor(
             "vijay-super-secret-jwt-key-2026-delivery-system"
-                    .getBytes(StandardCharsets.UTF_8)
-    );
+                    .getBytes(StandardCharsets.UTF_8));
 
-    public String generateToken(String email) {
+    public String generateToken(String email, String role) {
         return Jwts.builder()
                 .setSubject(email) // who the token belongs to
+                .claim("role", role) // role for gateway authorization
                 .setIssuedAt(new Date()) // creation time
                 .setExpiration(new Date(System.currentTimeMillis() + 86400000)) // 1 day
                 .signWith(key, SignatureAlgorithm.HS256) // sign with secret

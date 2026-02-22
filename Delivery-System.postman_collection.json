@@ -1,0 +1,515 @@
+{
+  "info": {
+    "_postman_id": "delivery-system-collection",
+    "name": "Delivery System Microservices - Complete API Collection",
+    "description": "Complete API collection for testing Delivery System Microservices via API Gateway",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "1. User Service",
+      "item": [
+        {
+          "name": "Register User",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"John Doe\",\n  \"email\": \"john@example.com\",\n  \"password\": \"password123\",\n  \"role\": \"CUSTOMER\"\n}"
+            },
+            "url": {
+              "raw": "{{gateway_url}}/user-service/api/auth/register",
+              "host": ["{{gateway_url}}"],
+              "path": ["user-service", "api", "auth", "register"]
+            },
+            "description": "Register a new user in the system"
+          }
+        },
+        {
+          "name": "Login User",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{gateway_url}}/user-service/api/auth/login?email=john@example.com&password=password123",
+              "host": ["{{gateway_url}}"],
+              "path": ["user-service", "api", "auth", "login"],
+              "query": [
+                {
+                  "key": "email",
+                  "value": "john@example.com"
+                },
+                {
+                  "key": "password",
+                  "value": "password123"
+                }
+              ]
+            },
+            "description": "Login user and get JWT token"
+          }
+        },
+        {
+          "name": "Register Customer",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Alice Customer\",\n  \"email\": \"alice@example.com\",\n  \"password\": \"pass123\",\n  \"role\": \"CUSTOMER\"\n}"
+            },
+            "url": {
+              "raw": "{{gateway_url}}/user-service/api/auth/register",
+              "host": ["{{gateway_url}}"],
+              "path": ["user-service", "api", "auth", "register"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Driver Service",
+      "item": [
+        {
+          "name": "Register Driver",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Mike Driver\",\n  \"vehicleNumber\": \"MH-12-AB-1234\",\n  \"phone\": \"9876543210\",\n  \"lastLat\": 19.0760,\n  \"lastLng\": 72.8777\n}"
+            },
+            "url": {
+              "raw": "{{gateway_url}}/driver-service/api/drivers/register",
+              "host": ["{{gateway_url}}"],
+              "path": ["driver-service", "api", "drivers", "register"]
+            },
+            "description": "Register a new driver"
+          }
+        },
+        {
+          "name": "Toggle Driver Status (Make Available)",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{gateway_url}}/driver-service/api/drivers/1/status",
+              "host": ["{{gateway_url}}"],
+              "path": ["driver-service", "api", "drivers", "1", "status"]
+            },
+            "description": "Toggle driver availability status"
+          }
+        },
+        {
+          "name": "Update Driver Location",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{gateway_url}}/driver-service/api/drivers/1/location?lat=19.0820&lng=72.8850",
+              "host": ["{{gateway_url}}"],
+              "path": ["driver-service", "api", "drivers", "1", "location"],
+              "query": [
+                {
+                  "key": "lat",
+                  "value": "19.0820"
+                },
+                {
+                  "key": "lng",
+                  "value": "72.8850"
+                }
+              ]
+            },
+            "description": "Update driver's current location"
+          }
+        },
+        {
+          "name": "Send GPS Event to Kafka",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{gateway_url}}/driver-service/api/drivers/1/gps?lat=19.0900&lng=72.8900",
+              "host": ["{{gateway_url}}"],
+              "path": ["driver-service", "api", "drivers", "1", "gps"],
+              "query": [
+                {
+                  "key": "lat",
+                  "value": "19.0900"
+                },
+                {
+                  "key": "lng",
+                  "value": "72.8900"
+                }
+              ]
+            },
+            "description": "Send GPS location to Kafka (tracking-service will consume it)"
+          }
+        },
+        {
+          "name": "Get Available Drivers",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{gateway_url}}/driver-service/api/drivers/available",
+              "host": ["{{gateway_url}}"],
+              "path": ["driver-service", "api", "drivers", "available"]
+            },
+            "description": "Get list of all available drivers"
+          }
+        },
+        {
+          "name": "Mark Order Picked Up",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{gateway_url}}/driver-service/api/drivers/1/orders/1/pickup",
+              "host": ["{{gateway_url}}"],
+              "path": ["driver-service", "api", "drivers", "1", "orders", "1", "pickup"]
+            },
+            "description": "Driver marks order as picked up (publishes Kafka event)"
+          }
+        },
+        {
+          "name": "Mark Order Delivered",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{gateway_url}}/driver-service/api/drivers/1/orders/1/delivered",
+              "host": ["{{gateway_url}}"],
+              "path": ["driver-service", "api", "drivers", "1", "orders", "1", "delivered"]
+            },
+            "description": "Driver marks order as delivered (publishes Kafka event)"
+          }
+        },
+        {
+          "name": "Register Driver 2",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Sarah Driver\",\n  \"vehicleNumber\": \"DL-10-XY-5678\",\n  \"phone\": \"9123456780\",\n  \"lastLat\": 28.6139,\n  \"lastLng\": 77.2090\n}"
+            },
+            "url": {
+              "raw": "{{gateway_url}}/driver-service/api/drivers/register",
+              "host": ["{{gateway_url}}"],
+              "path": ["driver-service", "api", "drivers", "register"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Order Service",
+      "item": [
+        {
+          "name": "Create Order",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customerName\": \"John Doe\",\n  \"pickupAddress\": \"123 Main St, Mumbai\",\n  \"deliveryAddress\": \"456 Park Ave, Mumbai\",\n  \"pickupLat\": 19.0760,\n  \"pickupLng\": 72.8777,\n  \"deliveryLat\": 19.1234,\n  \"deliveryLng\": 72.9012\n}"
+            },
+            "url": {
+              "raw": "{{gateway_url}}/orders/api/orders",
+              "host": ["{{gateway_url}}"],
+              "path": ["orders", "api", "orders"]
+            },
+            "description": "Create a new order (publishes order-created event to Kafka)"
+          }
+        },
+        {
+          "name": "Assign Driver to Order",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{gateway_url}}/orders/api/orders/1/assign?driverId=1",
+              "host": ["{{gateway_url}}"],
+              "path": ["orders", "api", "orders", "1", "assign"],
+              "query": [
+                {
+                  "key": "driverId",
+                  "value": "1"
+                }
+              ]
+            },
+            "description": "Manually assign a driver to an order"
+          }
+        },
+        {
+          "name": "Update Order Status",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{gateway_url}}/orders/api/orders/1/status?status=PICKED_UP",
+              "host": ["{{gateway_url}}"],
+              "path": ["orders", "api", "orders", "1", "status"],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "PICKED_UP",
+                  "description": "Options: PENDING, ASSIGNED, PICKED_UP, DELIVERED, CANCELLED"
+                }
+              ]
+            },
+            "description": "Update order status"
+          }
+        },
+        {
+          "name": "Get All Orders",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{gateway_url}}/orders/api/orders",
+              "host": ["{{gateway_url}}"],
+              "path": ["orders", "api", "orders"]
+            },
+            "description": "Get list of all orders"
+          }
+        },
+        {
+          "name": "Create Order 2",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customerName\": \"Alice Customer\",\n  \"pickupAddress\": \"789 Lake View, Delhi\",\n  \"deliveryAddress\": \"321 Green Park, Delhi\",\n  \"pickupLat\": 28.5355,\n  \"pickupLng\": 77.3910,\n  \"deliveryLat\": 28.5494,\n  \"deliveryLng\": 77.2001\n}"
+            },
+            "url": {
+              "raw": "{{gateway_url}}/orders/api/orders",
+              "host": ["{{gateway_url}}"],
+              "path": ["orders", "api", "orders"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Tracking Service",
+      "item": [
+        {
+          "name": "Get Driver Location",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{gateway_url}}/tracking-service/tracking/1",
+              "host": ["{{gateway_url}}"],
+              "path": ["tracking-service", "tracking", "1"]
+            },
+            "description": "Get driver's latest GPS location from Redis"
+          }
+        },
+        {
+          "name": "Get Driver 2 Location",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{gateway_url}}/tracking-service/tracking/2",
+              "host": ["{{gateway_url}}"],
+              "path": ["tracking-service", "tracking", "2"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "5. Direct Service Access (No Gateway)",
+      "item": [
+        {
+          "name": "Direct - Register User",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Direct User\",\n  \"email\": \"direct@example.com\",\n  \"password\": \"pass123\",\n  \"role\": \"CUSTOMER\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8085/api/auth/register",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8085",
+              "path": ["api", "auth", "register"]
+            },
+            "description": "Direct access to User Service (bypassing API Gateway)"
+          }
+        },
+        {
+          "name": "Direct - Register Driver",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Direct Driver\",\n  \"vehicleNumber\": \"KA-01-AB-1111\",\n  \"phone\": \"9999999999\",\n  \"lastLat\": 12.9716,\n  \"lastLng\": 77.5946\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8082/api/drivers/register",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8082",
+              "path": ["api", "drivers", "register"]
+            },
+            "description": "Direct access to Driver Service"
+          }
+        },
+        {
+          "name": "Direct - Create Order",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customerName\": \"Direct Customer\",\n  \"pickupAddress\": \"Direct Pickup\",\n  \"deliveryAddress\": \"Direct Delivery\",\n  \"pickupLat\": 12.9716,\n  \"pickupLng\": 77.5946,\n  \"deliveryLat\": 12.9352,\n  \"deliveryLng\": 77.6245\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8081/api/orders",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8081",
+              "path": ["api", "orders"]
+            },
+            "description": "Direct access to Order Service"
+          }
+        },
+        {
+          "name": "Direct - Get Driver Location",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8084/tracking/1",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8084",
+              "path": ["tracking", "1"]
+            },
+            "description": "Direct access to Tracking Service"
+          }
+        }
+      ]
+    },
+    {
+      "name": "6. Health Checks",
+      "item": [
+        {
+          "name": "Eureka Dashboard",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8761",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8761"
+            },
+            "description": "View Eureka service registry"
+          }
+        },
+        {
+          "name": "API Gateway Health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/actuator/health",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["actuator", "health"]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "gateway_url",
+      "value": "http://localhost:8080",
+      "type": "string"
+    },
+    {
+      "key": "user_service_port",
+      "value": "8085",
+      "type": "string"
+    },
+    {
+      "key": "order_service_port",
+      "value": "8081",
+      "type": "string"
+    },
+    {
+      "key": "driver_service_port",
+      "value": "8082",
+      "type": "string"
+    },
+    {
+      "key": "tracking_service_port",
+      "value": "8084",
+      "type": "string"
+    },
+    {
+      "key": "eureka_port",
+      "value": "8761",
+      "type": "string"
+    }
+  ]
+}
+

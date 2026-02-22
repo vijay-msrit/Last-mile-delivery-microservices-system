@@ -17,7 +17,7 @@ import java.security.Key;
 public class JwtFilter implements GlobalFilter {
 
     private static final String SECRET =
-            "mySecretKeymySecretKeymySecretKey";
+            "vijay-super-secret-jwt-key-2026-delivery-system";
 
     private final Key key =
             Keys.hmacShaKeyFor(SECRET.getBytes(StandardCharsets.UTF_8));

@@ -8,10 +8,10 @@ import org.springframework.stereotype.Service;
 @Service
 public class GpsEventProducer {
 
-    private final KafkaTemplate<String, String> kafkaTemplate;
+    private final KafkaTemplate<String, Object> kafkaTemplate;
     private final ObjectMapper mapper = new ObjectMapper();
 
-    public GpsEventProducer(KafkaTemplate<String, String> kafkaTemplate) {
+    public GpsEventProducer(KafkaTemplate<String, Object> kafkaTemplate) {
         this.kafkaTemplate = kafkaTemplate;
     }
 

@@ -1,0 +1,46 @@
+# Walkthrough — SwiftDeliver Frontend
+
+## Screenshots
+
+````carousel
+![Login Page](C:\Users\ASUS\.gemini\antigravity\brain\b5808b54-82c2-4e81-a823-d967fe233c30\login_page_1771688265392.png)
+<!-- slide -->
+![Register Page](C:\Users\ASUS\.gemini\antigravity\brain\b5808b54-82c2-4e81-a823-d967fe233c30\register_page_1771688314407.png)
+<!-- slide -->
+![Customer Dashboard](C:\Users\ASUS\.gemini\antigravity\brain\b5808b54-82c2-4e81-a823-d967fe233c30\customer_dashboard_1771688342903.png)
+<!-- slide -->
+![Place Order Page](C:\Users\ASUS\.gemini\antigravity\brain\b5808b54-82c2-4e81-a823-d967fe233c30\place_order_page_final_1771688355048.png)
+````
+
+## Browser Recording
+
+![Full UI walkthrough recording](C:\Users\ASUS\.gemini\antigravity\brain\b5808b54-82c2-4e81-a823-d967fe233c30\register_and_dashboard_1771688293331.webp)
+
+## What Was Built
+
+**40+ files** across a production-grade React frontend for the last-mile delivery platform.
+
+| Layer | Highlights |
+|---|---|
+| **Design System** | Swiggy-inspired dark theme, 15+ keyframe animations, glassmorphism surfaces |
+| **API Layer** | Axios + JWT interceptor, all 7 backend service endpoints mapped |
+| **State** | 4 Zustand stores (Auth, Order, Driver, Notification) |
+| **Real-time** | WebSocket auto-reconnect + tracking service polling every 3s |
+| **Maps** | Leaflet with custom animated driver/pickup/delivery markers |
+| **Routing** | Role-based guards — CUSTOMER and DRIVER get separate dashboards |
+| **Pages** | Login, Register, Customer Dashboard, Place Order, My Orders, Track Order, Driver Dashboard, Driver Orders, 404 |
+
+## How to Run
+
+```bash
+cd delivery-frontend
+npm run dev    # → http://localhost:5173
+```
+
+## Build Status
+
+✅ Vite production build passed in 14.29s
+
+## ⚠️ Backend Fixes Needed
+1. **JWT secrets** must match between `user-service` and `api_gateway`
+2. **Gateway routes** needed for driver, user, and tracking services

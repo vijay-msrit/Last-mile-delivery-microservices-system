@@ -1,0 +1,521 @@
+# Frontend Architecture — Last-Mile Delivery Platform
+
+A production-grade React frontend for a microservices delivery platform, inspired by Swiggy/Zomato aesthetics.
+
+---
+
+## Backend Services Reference
+
+| Service | Port | Base Path | Key Endpoints |
+|---|---|---|---|
+| **API Gateway** | 8080 | `/` | Routes all traffic, JWT validation |
+| **User Service** | 8081 | `/api/auth` | `POST /register`, `POST /login` |
+| **Order Service** | 8081 | `/api/orders` | `POST /`, `GET /`, `PATCH /{id}/assign`, `PATCH /{id}/status` |
+| **Driver Service** | 8082 | `/api/drivers` | `POST /register`, `PATCH /{id}/status`, `PATCH /{id}/location`, `POST /{id}/gps`, `GET /available`, `POST /{dId}/orders/{oId}/pickup`, `POST /{dId}/orders/{oId}/delivered` |
+| **Logistics Service** | 8083 | — | Kafka-driven auto-assignment (no REST API) |
+| **Tracking Service** | 8084 | `/tracking` | `GET /{driverId}` (Redis location) |
+| **Notification Service** | 8086 | `/ws/notify` | WebSocket broadcast |
+
+**Kafka Topics:** `order-created`, `driver-assigned`, `order-picked-up`, `order-delivered`
+
+**Order Statuses:** `PENDING` → `ASSIGNED` → `PICKED_UP` → `DELIVERED` / `CANCELLED`
+
+**User Roles:** `CUSTOMER`, `DRIVER`, `ADMIN`
+
+---
+
+## 1. Tech Stack
+
+| Layer | Choice | Why |
+|---|---|---|
+| **Framework** | React 18 + Vite | Blazing-fast HMR, ESM-native, lightweight |
+| **Routing** | React Router v6 | Nested layouts, role-based guards |
+| **State** | Zustand | Minimal boilerplate, no Provider nesting, perfect for this scale |
+| **HTTP Client** | Axios | Interceptors for JWT injection + refresh |
+| **WebSocket** | Native [WebSocket](file:///c:/Users/ASUS/OneDrive/Desktop/6th%20sem/delivery%20system%20project/delivery-system-microservices/notification-service/src/main/java/com/example/notification_service/config/WebSocketConfig.java#9-24) API | Backend uses raw WS at `/ws/notify`, not STOMP/SockJS |
+| **Maps** | React Leaflet + OpenStreetMap | Free, no API key required, production-quality |
+| **Styling** | CSS Modules + CSS Custom Properties | No build tooling overhead, full control over design tokens |
+| **Animations** | Framer Motion | React-native spring physics, layout animations |
+| **Icons** | Lucide React | Crisp, consistent SVG icon library |
+| **Toasts** | React Hot Toast | Lightweight, customizable notification popups |
+| **Geocoding** | OpenStreetMap Nominatim | Free address ↔ coords conversion |
+
+---
+
+## 2. Folder Structure
+
+```
+delivery-frontend/
+├── public/
+│   ├── favicon.svg
+│   └── index.html
+├── src/
+│   ├── api/                          # API layer
+│   │   ├── axiosClient.js            # Axios instance + JWT interceptor
+│   │   ├── authApi.js                # login, register
+│   │   ├── orderApi.js               # CRUD, assign, status
+│   │   ├── driverApi.js              # register, gps, pickup, delivered
+│   │   └── trackingApi.js            # get driver location
+│   ├── assets/                       # Images, illustrations
+│   │   ├── hero-delivery.svg
+│   │   ├── logo.svg
+│   │   └── empty-state.svg
+│   ├── components/                   # Reusable UI
+│   │   ├── common/
+│   │   │   ├── Button.jsx + Button.module.css
+│   │   │   ├── Input.jsx + Input.module.css
+│   │   │   ├── Badge.jsx + Badge.module.css
+│   │   │   ├── Card.jsx + Card.module.css
+│   │   │   ├── Modal.jsx + Modal.module.css
+│   │   │   ├── Spinner.jsx + Spinner.module.css
+│   │   │   ├── Avatar.jsx
+│   │   │   └── EmptyState.jsx
+│   │   ├── layout/
+│   │   │   ├── Navbar.jsx + Navbar.module.css
+│   │   │   ├── Sidebar.jsx + Sidebar.module.css
+│   │   │   ├── AppLayout.jsx
+│   │   │   └── AuthLayout.jsx
+│   │   ├── order/
+│   │   │   ├── OrderCard.jsx + OrderCard.module.css
+│   │   │   ├── OrderTimeline.jsx     # Visual status stepper
+│   │   │   ├── PlaceOrderForm.jsx
+│   │   │   └── OrderList.jsx
+│   │   ├── driver/
+│   │   │   ├── DriverCard.jsx
+│   │   │   ├── DriverStatusToggle.jsx
+│   │   │   └── ActiveDeliveryCard.jsx
+│   │   ├── tracking/
+│   │   │   ├── LiveMap.jsx           # Leaflet map component
+│   │   │   ├── DriverMarker.jsx
+│   │   │   └── RoutePolyline.jsx
+│   │   └── notification/
+│   │       ├── NotificationBell.jsx
+│   │       └── ToastNotification.jsx
+│   ├── hooks/                        # Custom React hooks
+│   │   ├── useWebSocket.js           # WebSocket connection manager
+│   │   ├── useAuth.js
+│   │   ├── useDriverLocation.js      # Polls tracking service
+│   │   └── useGeoLocation.js         # Browser geolocation API
+│   ├── pages/                        # Route-level pages
+│   │   ├── auth/
+│   │   │   ├── LoginPage.jsx + LoginPage.module.css
+│   │   │   └── RegisterPage.jsx + RegisterPage.module.css
+│   │   ├── customer/
+│   │   │   ├── CustomerDashboard.jsx
+│   │   │   ├── PlaceOrderPage.jsx
+│   │   │   ├── MyOrdersPage.jsx
+│   │   │   └── TrackOrderPage.jsx    # Live map tracking
+│   │   ├── driver/
+│   │   │   ├── DriverDashboard.jsx
+│   │   │   ├── ActiveDeliveryPage.jsx
+│   │   │   └── DriverOrdersPage.jsx
+│   │   └── NotFoundPage.jsx
+│   ├── store/                        # Zustand stores
+│   │   ├── authStore.js
+│   │   ├── orderStore.js
+│   │   ├── driverStore.js
+│   │   └── notificationStore.js
+│   ├── styles/                       # Global styles & design tokens
+│   │   ├── index.css                 # CSS reset + custom properties
+│   │   ├── tokens.css                # Color palette, spacing, typography
+│   │   └── animations.css
+│   ├── utils/
+│   │   ├── constants.js              # API URLs, WS URL
+│   │   ├── formatters.js             # Date, status label formatting
+│   │   └── validators.js
+│   ├── routes/
+│   │   ├── AppRoutes.jsx             # Route definitions
+│   │   └── ProtectedRoute.jsx        # Role-based guard
+│   ├── App.jsx
+│   └── main.jsx
+├── .env
+├── .env.example
+├── package.json
+└── vite.config.js
+```
+
+---
+
+## 3. Pages & User Flows
+
+### 3.1 Authentication Flow
+
+```mermaid
+sequenceDiagram
+    participant U as User
+    participant FE as React App
+    participant GW as API Gateway :8080
+    participant US as User Service
+
+    U->>FE: Enter email + password + role
+    FE->>GW: POST /api/auth/login
+    GW->>US: Forward (public path, no JWT needed)
+    US-->>GW: JWT token string
+    GW-->>FE: JWT token
+    FE->>FE: Store JWT in localStorage + Zustand
+    FE->>FE: Decode JWT → extract role
+    FE->>FE: Route to Customer or Driver dashboard
+```
+
+### 3.2 Customer Pages
+
+| Page | Description | Key Features |
+|---|---|---|
+| **Login / Register** | Auth with role selection (Customer/Driver) | Animated form transitions, validation |
+| **Customer Dashboard** | Overview with recent orders + stats | Animated stat cards, order count, active deliveries |
+| **Place Order** | Form with pickup & delivery address | Address autocomplete (Nominatim), map preview, animated submit |
+| **My Orders** | Filterable list of all orders | Status badges, timeline, click-to-track |
+| **Track Order** | Live map showing driver location | Real-time Leaflet map, animated marker, ETA display, status stepper |
+
+### 3.3 Driver Pages
+
+| Page | Description | Key Features |
+|---|---|---|
+| **Driver Dashboard** | Toggle availability, see assigned orders | Online/Offline toggle, GPS broadcasting, earning stats |
+| **Active Delivery** | Current delivery with navigation | Live map with route, pickup/delivered buttons, order details |
+| **Order History** | Past completed deliveries | Completed/cancelled filter, delivery timeline |
+
+---
+
+## 4. API Integration Architecture
+
+### 4.1 Axios Client with JWT Interceptor
+
+```javascript
+// src/api/axiosClient.js — Conceptual
+const api = axios.create({ baseURL: 'http://localhost:8080' });
+
+api.interceptors.request.use((config) => {
+  const token = useAuthStore.getState().token;
+  if (token) config.headers.Authorization = `Bearer ${token}`;
+  return config;
+});
+
+api.interceptors.response.use(
+  (res) => res,
+  (err) => {
+    if (err.response?.status === 401) {
+      useAuthStore.getState().logout();
+      window.location.href = '/login';
+    }
+    return Promise.reject(err);
+  }
+);
+```
+
+### 4.2 API Module Mapping
+
+```javascript
+// authApi.js
+POST /api/auth/register  → { email, password, role }   → "Registered"
+POST /api/auth/login     → ?email=...&password=...     → JWT string
+
+// orderApi.js
+POST   /api/orders           → { userId, pickupAddress, deliveryAddress }  → Order
+GET    /api/orders           → —                                          → Order[]
+PATCH  /api/orders/{id}/assign  → ?driverId=...                           → Order
+PATCH  /api/orders/{id}/status  → ?status=...                             → Order
+
+// driverApi.js
+POST   /api/drivers/register              → { name, vehicleNumber }  → DriverResponse
+PATCH  /api/drivers/{id}/status           → —                        → DriverResponse
+PATCH  /api/drivers/{id}/location         → ?lat=...&lng=...         → DriverResponse
+POST   /api/drivers/{id}/gps             → ?lat=...&lng=...         → "GPS sent"
+GET    /api/drivers/available            → —                        → DriverResponse[]
+POST   /api/drivers/{dId}/orders/{oId}/pickup     → —               → "Picked up"
+POST   /api/drivers/{dId}/orders/{oId}/delivered   → —              → "Delivered"
+
+// trackingApi.js
+GET    /tracking/{driverId}              → —                        → "lat,lng" string
+```
+
+---
+
+## 5. WebSocket Integration
+
+### 5.1 Connection Flow
+
+```mermaid
+sequenceDiagram
+    participant FE as React App
+    participant NS as Notification Service :8086
+
+    FE->>NS: new WebSocket('ws://localhost:8086/ws/notify')
+    NS-->>FE: Connection established
+    loop On Kafka events
+        NS->>FE: "ORDER_CREATED: {json}"
+        NS->>FE: "DRIVER_ASSIGNED: {json}"
+        NS->>FE: "ORDER_PICKED_UP: {json}"
+        NS->>FE: "ORDER_DELIVERED: {json}"
+    end
+    FE->>FE: Parse event type + data
+    FE->>FE: Update Zustand store + show toast
+```
+
+### 5.2 `useWebSocket` Hook Design
+
+```javascript
+// Conceptual — src/hooks/useWebSocket.js
+function useWebSocket() {
+  useEffect(() => {
+    const ws = new WebSocket('ws://localhost:8086/ws/notify');
+    ws.onmessage = (event) => {
+      const [type, ...dataParts] = event.data.split(': ');
+      const data = dataParts.join(': ');
+      // Dispatch to stores based on type:
+      // ORDER_CREATED    → orderStore.addOrder(JSON.parse(data))
+      // DRIVER_ASSIGNED  → orderStore.updateOrder(...)
+      // ORDER_PICKED_UP  → orderStore.updateStatus(...)
+      // ORDER_DELIVERED   → orderStore.updateStatus(...)
+      // Show toast notification
+    };
+    ws.onclose = () => { /* Auto-reconnect with exponential backoff */ };
+    return () => ws.close();
+  }, []);
+}
+```
+
+---
+
+## 6. State Management (Zustand)
+
+```mermaid
+graph LR
+    A[authStore] -->|token, user, role| B[ProtectedRoute]
+    C[orderStore] -->|orders, activeOrder| D[MyOrdersPage]
+    C -->|activeOrder| E[TrackOrderPage]
+    F[driverStore] -->|isOnline, assignedOrders| G[DriverDashboard]
+    H[notificationStore] -->|notifications| I[NotificationBell]
+    J[WebSocket] -->|events| C
+    J -->|events| H
+```
+
+| Store | State | Actions |
+|---|---|---|
+| `authStore` | `token`, `user`, `role`, `isAuthenticated` | [login()](file:///c:/Users/ASUS/OneDrive/Desktop/6th%20sem/delivery%20system%20project/delivery-system-microservices/user-service/src/main/java/com/vijay/user_service/controller/AuthController.java#18-23), [register()](file:///c:/Users/ASUS/OneDrive/Desktop/6th%20sem/delivery%20system%20project/delivery-system-microservices/driver-service/src/main/java/com/vijay/driver_service/controller/DriverController.java#24-28), `logout()`, `hydrateFromStorage()` |
+| `orderStore` | `orders[]`, `activeOrder`, `loading` | `fetchOrders()`, [placeOrder()](file:///c:/Users/ASUS/OneDrive/Desktop/6th%20sem/delivery%20system%20project/delivery-system-microservices/order-service/src/main/java/com/vijay/order_service/controller/OrderController.java#20-25), `updateOrderFromWS()` |
+| `driverStore` | `isOnline`, `assignedOrders[]`, `currentLocation` | [toggleStatus()](file:///c:/Users/ASUS/OneDrive/Desktop/6th%20sem/delivery%20system%20project/delivery-system-microservices/driver-service/src/main/java/com/vijay/driver_service/controller/DriverController.java#29-33), [sendGps()](file:///c:/Users/ASUS/OneDrive/Desktop/6th%20sem/delivery%20system%20project/delivery-system-microservices/driver-service/src/main/java/com/vijay/driver_service/controller/DriverController.java#41-49), `markPickup()`, `markDelivered()` |
+| `notificationStore` | `notifications[]`, `unreadCount` | `addNotification()`, `markAllRead()`, `clearAll()` |
+
+---
+
+## 7. Map Integration (React Leaflet)
+
+### 7.1 Live Tracking Architecture
+
+```mermaid
+graph TB
+    A[Driver App] -->|POST /drivers/{id}/gps| B[Driver Service]
+    B -->|Kafka: gps-events| C[Tracking Service]
+    C -->|Store| D[(Redis)]
+    E[Customer App] -->|Poll GET /tracking/{driverId}| C
+    C -->|"lat,lng"| E
+    E -->|Update marker| F[Leaflet Map]
+```
+
+### 7.2 Key Implementation Details
+
+- **Polling interval**: Every 3 seconds via `useDriverLocation` hook
+- **Animated markers**: Smooth CSS transition between GPS coordinates (no jumps)
+- **Route visualization**: Polyline from pickup → current → delivery coordinates
+- **Map tiles**: OpenStreetMap free tiles — `https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png`
+- **Geocoding**: Nominatim API to convert addresses to lat/lng for map positioning
+
+---
+
+## 8. Component Design System (Swiggy/Zomato Inspired)
+
+### 8.1 Color Palette
+
+```css
+/* Inspired by Swiggy's warm orange + dark contrast */
+:root {
+  /* Primary — Warm Orange Gradient */
+  --primary-500: #FF5200;
+  --primary-600: #E04600;
+  --primary-400: #FF7A33;
+  --primary-gradient: linear-gradient(135deg, #FF5200, #FF7A33);
+
+  /* Neutral — Deep Charcoal for premiumness */
+  --surface-bg: #0F0F0F;
+  --surface-card: #1A1A1A;
+  --surface-elevated: #252525;
+  --text-primary: #FFFFFF;
+  --text-secondary: #9CA3AF;
+  --text-muted: #6B7280;
+
+  /* Status Colors */
+  --status-pending: #FBBF24;
+  --status-assigned: #60A5FA;
+  --status-picked-up: #A78BFA;
+  --status-delivered: #34D399;
+  --status-cancelled: #F87171;
+
+  /* Glassmorphism */
+  --glass-bg: rgba(255, 255, 255, 0.05);
+  --glass-border: rgba(255, 255, 255, 0.1);
+  --glass-blur: blur(20px);
+
+  /* Typography */
+  --font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+}
+```
+
+### 8.2 Component Style Guide
+
+| Component | Design Treatment |
+|---|---|
+| **Cards** | Dark glass cards with subtle borders, hover lift animation |
+| **Buttons** | Gradient fill, rounded, icon+text, ripple effect on click |
+| **Badges** | Color-coded by status, pill shape, subtle glow |
+| **Inputs** | Floating labels, underline focus animation, dark background |
+| **Sidebar** | Full-height glass panel, icon + text nav items, active indicator |
+| **Navbar** | Glassmorphism header, notification bell with count badge |
+| **Modals** | Centered overlay with backdrop blur, spring animation |
+| **Timeline** | Vertical stepper with animated completion, status colors |
+
+---
+
+## 9. Animations & UX Enhancements
+
+### 9.1 Framer Motion Animations
+
+| Where | Animation |
+|---|---|
+| Page transitions | Fade + slide-up with `AnimatePresence` |
+| Order cards | `layout` animation for list reordering |
+| Status badge | Color morph transition on status change |
+| Dashboard stats | Count-up number animation on mount |
+| Map marker | Spring-physics interpolation between GPS points |
+| Form validation | Shake animation on error |
+| Buttons | Scale-down on press + ripple effect |
+| Sidebar | Smooth slide-in/out on mobile |
+| Toast notifications | Slide-in from top-right with auto-dismiss |
+| Order timeline | Staggered step reveal animation |
+
+### 9.2 Micro-Interactions
+
+- **Online/Offline toggle**: Smooth slider with color transition + particle burst
+- **Order placed**: Success confetti animation + toast
+- **Driver assigned**: Pulse ring around driver avatar
+- **Delivery complete**: Checkmark lottie-style animation
+- **Hover effects**: Cards lift 4px with box-shadow spread, navbar items underline slide
+
+---
+
+## 10. Routing & Guards
+
+```javascript
+// Route structure
+<Routes>
+  {/* Public */}
+  <Route element={<AuthLayout />}>
+    <Route path="/login" element={<LoginPage />} />
+    <Route path="/register" element={<RegisterPage />} />
+  </Route>
+
+  {/* Customer routes — role: CUSTOMER */}
+  <Route element={<ProtectedRoute allowedRoles={['CUSTOMER']} />}>
+    <Route element={<AppLayout />}>
+      <Route path="/" element={<CustomerDashboard />} />
+      <Route path="/order/new" element={<PlaceOrderPage />} />
+      <Route path="/orders" element={<MyOrdersPage />} />
+      <Route path="/track/:orderId" element={<TrackOrderPage />} />
+    </Route>
+  </Route>
+
+  {/* Driver routes — role: DRIVER */}
+  <Route element={<ProtectedRoute allowedRoles={['DRIVER']} />}>
+    <Route element={<AppLayout />}>
+      <Route path="/driver" element={<DriverDashboard />} />
+      <Route path="/driver/delivery/:orderId" element={<ActiveDeliveryPage />} />
+      <Route path="/driver/orders" element={<DriverOrdersPage />} />
+    </Route>
+  </Route>
+
+  <Route path="*" element={<NotFoundPage />} />
+</Routes>
+```
+
+### ProtectedRoute Logic
+1. Check `authStore.isAuthenticated`
+2. If not → redirect to `/login`
+3. If yes → check `authStore.role` against `allowedRoles`
+4. If role mismatch → redirect to appropriate dashboard
+5. If OK → render `<Outlet />`
+
+---
+
+## 11. Environment Configuration
+
+```env
+# .env
+VITE_API_BASE_URL=http://localhost:8080
+VITE_WS_NOTIFICATION_URL=ws://localhost:8086/ws/notify
+VITE_TRACKING_POLL_INTERVAL=3000
+VITE_MAP_TILE_URL=https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png
+```
+
+---
+
+## 12. Data Flow Summary
+
+```mermaid
+graph TB
+    subgraph Frontend
+        A[React App] -->|Axios + JWT| B[API Layer]
+        A -->|WebSocket| C[useWebSocket Hook]
+        A -->|Polling| D[useDriverLocation Hook]
+        C -->|Events| E[Zustand Stores]
+        D -->|GPS coords| E
+        B -->|Responses| E
+        E -->|Reactive| F[UI Components]
+    end
+
+    subgraph Backend
+        G[API Gateway :8080] -->|Route| H[User Service]
+        G -->|Route| I[Order Service]
+        G -->|Route| J[Driver Service]
+        K[Tracking Service :8084]
+        L[Notification Service :8086]
+    end
+
+    B --> G
+    C --> L
+    D --> K
+```
+
+---
+
+## User Review Required
+
+> [!IMPORTANT]
+> **JWT Secret Key Mismatch**: The user-service uses `"vijay-super-secret-jwt-key-2026-delivery-system"` while the API gateway uses `"mySecretKeymySecretKey..."`. These MUST match for JWT validation to work end-to-end. This needs to be fixed in the backend before the frontend can work properly through the gateway.
+
+> [!IMPORTANT]
+> **Gateway Routing Incomplete**: Currently only `order-service` has an explicit route in the gateway. Routes for `driver-service`, `user-service`, and `tracking-service` should be added. The Eureka discovery locator is enabled (`lower-case-service-id=true`), so services may be accessible via `/{service-name}/...` pattern, but explicit routes would be more reliable.
+
+> [!NOTE]
+> The notification WebSocket endpoint (`ws://localhost:8086/ws/notify`) is direct to the notification service, bypassing the gateway. This is fine for development but in production should be proxied.
+
+---
+
+## Verification Plan
+
+### Browser Testing
+1. **Start backend** → all 7 services + Kafka + Redis + Postgres via docker-compose
+2. **Start frontend** → `npm run dev` → opens on `localhost:5173`
+3. **Test login flow** → register a CUSTOMER, login, verify JWT stored & redirected to dashboard
+4. **Test order placement** → place an order, verify it appears in "My Orders" and WebSocket sends ORDER_CREATED toast
+5. **Test driver flow** → login as DRIVER, toggle online, verify GPS sending, mark pickup → delivered
+6. **Test live tracking** → customer views TrackOrderPage, verify map loads with driver marker updating every 3 seconds
+7. **Test role guards** → customer cannot access `/driver/*` routes and vice versa
+
+### Manual Verification
+- Visual inspection of dark theme, glassmorphism, animations against Swiggy/Zomato reference
+- Responsive layout check at 1440px, 1024px, 768px, 375px breakpoints
+- WebSocket reconnection test (kill and restart notification service)
