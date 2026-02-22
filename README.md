@@ -975,8 +975,6 @@ delivery-system-microservices/
 
 ## 🎓 Key Learning Outcomes
 
-### For Recruiters
-
 This project demonstrates proficiency in:
 
 ✅ **Microservices Architecture** - Designing and implementing distributed systems
@@ -1021,14 +1019,7 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 
 ## 📧 Contact
 
-**Your Name** - [your.email@example.com](mailto:your.email@example.com)
-
-**LinkedIn:** [Your LinkedIn Profile](https://linkedin.com/in/yourprofile)
-
-**GitHub:** [Your GitHub Profile](https://github.com/yourusername)
-
-**Project Link:** [https://github.com/yourusername/delivery-system-microservices](https://github.com/yourusername/delivery-system-microservices)
-
+**vijay Anumalasetti** - [your.email@example.com](mailto:vijayanumalasetti@example.com)
 ---
 
 ## 📄 License
