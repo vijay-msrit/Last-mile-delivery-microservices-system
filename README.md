@@ -765,25 +765,6 @@ Import file: Delivery-System.postman_collection.json
                                   └───────────────┘
 ```
 
-### WebSocket Connection
-
-**Connect to WebSocket:**
-```javascript
-// Using SockJS and STOMP
-const socket = new SockJS('http://localhost:8086/ws');
-const stompClient = Stomp.over(socket);
-
-stompClient.connect({}, function(frame) {
-    console.log('Connected: ' + frame);
-    
-    // Subscribe to notifications
-    stompClient.subscribe('/topic/notifications', function(message) {
-        const notification = JSON.parse(message.body);
-        console.log('Received:', notification);
-        // Update UI in real-time
-    });
-});
-```
 
 ### Notification Types
 
@@ -1019,7 +1000,7 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 
 ## 📧 Contact
 
-**vijay Anumalasetti** - [your.email@example.com](mailto:vijayanumalasetti@example.com)
+**vijay Anumalasetti** - [vijayanumalasetti@example.com](mailto:vijayanumalasetti@example.com)
 ---
 
 ## 📄 License
